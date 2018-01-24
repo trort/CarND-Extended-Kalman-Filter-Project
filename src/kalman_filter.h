@@ -4,6 +4,7 @@
 
 class KalmanFilter {
 public:
+  const double PI = 3.141592653589793238463;
 
   // state vector
   Eigen::VectorXd x_;
@@ -22,6 +23,9 @@ public:
 
   // measurement covariance matrix
   Eigen::MatrixXd R_;
+
+  // Identity matrix;
+  Eigen::MatrixXd I_;
 
   /**
    * Constructor

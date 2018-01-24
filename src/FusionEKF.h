@@ -38,12 +38,15 @@ private:
   // previous timestamp
   long long previous_timestamp_;
 
+  // internal noise for acc
+  double noise_ax_;
+  double noise_ay_;
+
   // tool object used to compute Jacobian and RMSE
   Tools tools;
   Eigen::MatrixXd R_laser_;
   Eigen::MatrixXd R_radar_;
   Eigen::MatrixXd H_laser_;
-  Eigen::MatrixXd Hj_;
 };
 
 #endif /* FusionEKF_H_ */
