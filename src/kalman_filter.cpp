@@ -18,13 +18,6 @@ void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
   H_ = H_in;
   R_ = R_in;
   Q_ = Q_in;
-
-  MatrixXd I_in(4, 4);
-  I_in << 1, 0, 0, 0,
-          0, 1, 0, 0,
-          0, 0, 1, 0,
-          0, 0, 0, 1;
-  I_ = I_in;
 }
 
 void KalmanFilter::Predict() {
@@ -39,38 +32,42 @@ void KalmanFilter::Update(const VectorXd &z) {
   /**
     * update the state by using Kalman Filter equations
   */
-  MatrixXd Ht = H_.transpose();
   VectorXd y = z - H_ * x_;
 
-  MatrixXd S = H_ * P_ * Ht + R_;
-  MatrixXd K = P_ * Ht * S.inverse();
-
-  x_ = x_ + K * y;
-  P_ = (I_ - K * H_) * P_;
+  UpdateCommon(y);
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
   /**
     * update the state by using Extended Kalman Filter equations
   */
-  MatrixXd Ht = H_.transpose();
+  const double eps = 0.000000001;
   double px, py, vx, vy;
   px = x_(0);
   py = x_(1);
   vx = x_(2);
   vy = x_(3);
-  double norm = sqrt(px * px + py * py);
+  double rho = sqrt(px * px + py * py);
+  double theta;
+  if (abs(py) < eps && abs(px) < eps) { theta = z(1); } // assume nor theta error when both px and py are 0
+  else { theta = atan2(py, px); }
+  double rho_dot = (px * vx + py * vy) / std::max(eps, rho);
   VectorXd hx(3);
-  hx << norm, atan2(py, px), (px * vx + py * vy) / norm;
+  hx << rho, theta, rho_dot;
   VectorXd y = z - hx;
 
   // make theta in y within (-PI, PI]
-  while (y(1) > PI) {y(1) -= 2 * PI;}
-  while (y(1) <= -PI) {y(1) += 2 * PI;}
+  while (y(1) > PI) { y(1) -= 2 * PI; }
+  while (y(1) <= -PI) { y(1) += 2 * PI; }
 
-  MatrixXd S = H_ * P_ * Ht + R_;
-  MatrixXd K = P_ * Ht * S.inverse();
+  UpdateCommon(y);
+}
+
+void KalmanFilter::UpdateCommon(const Eigen::VectorXd &y) {
+  MatrixXd PHt = P_ * H_.transpose();
+  MatrixXd S = H_ * PHt + R_;
+  MatrixXd K = PHt * S.inverse();
 
   x_ = x_ + K * y;
-  P_ = (I_ - K * H_) * P_;
+  P_ -= K * H_ * P_;
 }

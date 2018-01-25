@@ -24,9 +24,6 @@ public:
   // measurement covariance matrix
   Eigen::MatrixXd R_;
 
-  // Identity matrix;
-  Eigen::MatrixXd I_;
-
   /**
    * Constructor
    */
@@ -68,6 +65,12 @@ public:
    */
   void UpdateEKF(const Eigen::VectorXd &z);
 
+  /**
+   * Updates the states X_ and Q_ by using Kalman Filter equations
+   * this is the common part shared by standard and extended Kalman Filters
+   * @param y The measurement/prediction difference y = z - hx
+   */
+  void UpdateCommon(const Eigen::VectorXd &y);
 };
 
 #endif /* KALMAN_FILTER_H_ */
